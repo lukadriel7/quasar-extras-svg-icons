@@ -3,11 +3,11 @@
     <q-dialog ref="dialogRef" v-model="showDialog">
       <q-card class="q-pa-md">
 
-        <div class="row justify-center items-center" style="max-width: 400px; max-height: 300px; width: 100%; height: 100%;">
+        <div class="row justify-center items-center" style="min-width: 400px; min-height: 300px;">
           <q-icon :name="currentPath" size="128px" class="q-pa-xs" :class="colorClasses" />
           <span class="full-width text-center" style="font-size: 28px;">{{ currentName }}</span>
 
-          <div class="row">
+          <div class="row justify-center">
             <div v-for="color in colors" :key="color" :class="colorClass(color)" style="width: 20px; height: 20px;" @click.stop="changeColor(color)" @mouseenter.stop="changeColor(color)"></div>
             <q-toggle v-model="inverted" label="Invert colors"
       />
@@ -43,9 +43,9 @@
         once
         class="intersetion-icon-box"
       >
-        <div class="row justify-center icon-box" @click="onClick(path, name)">
+        <div class="row justify-center text-grey-8 icon-box" @click="onClick(path, name)">
           <q-icon :name="path" size="md" class="q-pa-xs column" />
-          <span class="full-width text-center" style="font-size: 9px;">{{ name }}</span>
+          <div class="full-width text-center ellipsis" style="font-size: 9px;">{{ name }}</div>
         </div>
       </q-intersection>
     </div>
@@ -79,33 +79,84 @@ export default defineComponent({
         { label: 'Akar Icons', value: 'akar-icons' },
         { label: 'Ant Design Icons', value: 'ant-design-icons' },
         { label: 'Box Icons', value: 'box-icons' },
+        { label: 'Brand Icons', value: 'brand-icons' },
+        { label: 'Brandico Icons', value: 'brandico-icons' },
+        { label: 'Bytesize Icons', value: 'bytesize-icons' },
+        { label: 'Carbon Icons v11', value: 'carbon-icons-v11' },
+        { label: 'Carbon Icons', value: 'carbon-icons' },
+        { label: 'Carbon Pictograms v12', value: 'carbon-pictograms-v12' },
+        { label: 'Carbon Pictograms', value: 'carbon-pictograms' },
+        { label: 'Clarity Icons v6', value: 'clarity-icons-v6' },
+        { label: 'Clarity Icons', value: 'clarity-icons' },
         { label: 'Codicons', value: 'codicons' },
         { label: 'Cool Icons', value: 'cool-icons' },
+        { label: 'CoreUI Icons', value: 'coreui-icons' },
         { label: 'Country Flag Icons', value: 'country-flag-icons' },
-        { label: 'Entypo Icons', value: 'entypo-icons' },
+        { label: 'Dashicons', value: 'dashicons' },
+        { label: 'Dev Icons', value: 'dev-icons' },
+        { label: 'Drip Icons', value: 'drip-icons' },
+        { label: 'Elusive Icons', value: 'elusive-icons' },
+        { label: 'Entypo+ Icons', value: 'entypo-icons' },
+        { label: 'Evil Icons', value: 'evil-icons' },
+        { label: 'Feather Icons', value: 'feather-icons' },
+        { label: 'Flat Color Icons (Icons8)', value: 'flat-color-icons' },
+        { label: 'FlatUI Icons', value: 'flatui-icons' },
         { label: 'FluentUI System Icons', value: 'fluentui-system-icons' },
-        { label: 'Hero Icons (solid)', value: 'hero-icons-solid' },
-        { label: 'Hero Icons (outline)', value: 'hero-icons-outline' },
-        { label: 'Health Icons', value: 'health-icons' },
+        { label: 'Fontisto Icons', value: 'fontisto-icons' },
+        { label: 'Foundation Icons', value: 'foundation-icons' },
+        { label: 'Geom Icons', value: 'geom-icons' },
+        { label: 'GitLab Icons', value: 'gitlab-icons' },
+        { label: 'Glyphs Brands', value: 'glyphs-brands' },
+        { label: 'Glyphs Core Icons', value: 'glyphs-core-icons' },
         { label: 'Grid Icons', value: 'grid-icons' },
+        { label: 'Hero Icons v2', value: 'hero-icons-v2' },
+        { label: 'Hero Icons', value: 'hero-icons' },
+        { label: 'Health Icons', value: 'health-icons' },
         { label: 'Icomoon Free Icons', value: 'icomoon-free-icons' },
+        { label: 'Iconoir v5', value: 'iconoir-icons-v5' },
         { label: 'Iconoir', value: 'iconoir-icons' },
+        { label: 'IconPark Icons', value: 'iconpark-icons' },
+        { label: 'Icons Material (mui)', value: 'icons-material' },
+        { label: 'Ikonate', value: 'ikonate' },
+        { label: 'Ikons', value: 'ikons' },
         { label: 'Jam Icons', value: 'jam-icons' },
+        { label: 'Keyrune Icons', value: 'keyrune-icons' },
+        { label: 'Linear Icons', value: 'linear-icons' },
+        { label: 'Linecons', value: 'linecons' },
+        { label: 'Maki Icons (Mapbox) v8', value: 'maki-icons-v8' },
+        { label: 'Maki Icons (Mapbox)', value: 'maki-icons' },
+        { label: 'Map Icons', value: 'map-icons' },
         { label: 'Material Line Icons', value: 'material-line-icons' },
+        { label: 'Material Theme Icons', value: 'material-theme-icons' },
+        { label: 'Modern Icons', value: 'modern-icons' },
+        { label: 'Octicons v17', value: 'oct-icons-v17' },
         { label: 'Octicons', value: 'oct-icons' },
+        { label: 'Open Iconic', value: 'open-iconic' },
+        { label: 'Openmoji Icons v14', value: 'openmoji-icons-v14' },
+        { label: 'Openmoji Icons', value: 'openmoji-icons' },
+        { label: 'Phosphor Icons', value: 'phosphor-icons' },
         { label: 'Pixelart Icons', value: 'pixelart-icons' },
+        { label: 'Prime Icons v6', value: 'prime-icons-v6' },
         { label: 'Prime Icons', value: 'prime-icons' },
         { label: 'Radix-UI Icons', value: 'radix-ui-icons' },
         { label: 'Remix Icon', value: 'remix-icons' },
+        { label: 'Simple Icons v8', value: 'simple-icons-v8' },
+        { label: 'Simple Icons v7', value: 'simple-icons-v7' },
         { label: 'Simple Icons', value: 'simple-icons' },
+        { label: 'Simple Line Icons', value: 'simple-line-icons' },
+        { label: 'Stroke 7 Icons (Pixeden)', value: 'stroke7-icons' },
         { label: 'System UIcons', value: 'system-uicons' },
+        { label: 'Subway Icons', value: 'subway-icons' },
         { label: 'Tabler Icons', value: 'tabler-icons' },
         { label: 'Teeny Icons', value: 'teeny-icons' },
+        { label: 'Typicons', value: 'typ-icons' },
         { label: 'UIW Icons', value: 'uiw-icons' },
         { label: 'Unicons', value: 'unicons' },
+        { label: 'Vaadin Icons v23', value: 'vaadin-icons-v23' },
         { label: 'Vaadin Icons', value: 'vaadin-icons' },
         { label: 'Weather Icons', value: 'weather-icons' },
         { label: 'Webfont Medical Icons', value: 'webfont-medical-icons' },
+        { label: 'Windows Icons', value: 'windows-icons' },
         { label: 'Zond Icons', value: 'zond-icons' },
       ],
       importedIcons: null,
@@ -199,7 +250,7 @@ export default defineComponent({
       this.currentPath = path
       this.currentName = name
       this.showDialog = true
-      console.log(this.currentName, this.currentPath)
+      // console.log(this.currentName, this.currentPath)
       // this.dialogRef.show()
     },
 

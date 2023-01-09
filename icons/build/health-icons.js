@@ -9,6 +9,7 @@ const svgPath = '/**/*.svg'
 // ------------
 
 const glob = require('glob')
+const { writeFileSync } = require('fs')
 const { copySync } = require('fs-extra')
 const { resolve, join } = require('path')
 
@@ -22,6 +23,26 @@ const iconNames = new Set()
 
 const svgExports = []
 const typeExports = []
+
+const myFilters = [
+  {
+    from: /#[3]{3,6}/g,
+    to: 'currentColor'
+  },
+  {
+    from: /white/g,
+    to: 'none'
+  }
+]
+
+function preFilters (name, content) {
+  // See: https://github.com/hawkeye64/quasar-extras-svg-icons/issues/16
+  myFilters.forEach(filter => {
+    content = content.replace(filter.from, filter.to)
+  })
+  
+  return content
+}
 
 const svgFolder = resolve(__dirname, `${ packagePath }/${ iconPath }/`)
 const subfolders = [
@@ -61,12 +82,8 @@ subfolders.forEach(folder => {
       return
     }
 
-    if (name === 'healthFilledYes') {
-      console.log(name)
-    }
-  
     try {
-      const { svgDef, typeDef } = extract(file, name)
+      const { svgDef, typeDef } = extract(file, name, { preFilters })
       svgExports.push(svgDef)
       typeExports.push(typeDef)
   
@@ -87,6 +104,12 @@ copySync(
   resolve(__dirname, `../${ distName }/LICENSE.md`)
 )
 
+// write the JSON file
+const file = resolve(__dirname, join('..', distName, 'icons.json'))
+writeFileSync(file, JSON.stringify([...iconNames].sort(), null, 2), 'utf-8')
+
 const end = new Date()
 
-console.log(`${ iconSetName } done (${ end - start }ms)`)
+console.log(`${ iconSetName } (count: ${ iconNames.size }) done (${ end - start }ms)`)
+
+process.send && process.send({ distName, iconNames: [...iconNames], time: end - start })

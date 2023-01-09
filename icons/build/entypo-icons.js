@@ -9,8 +9,9 @@ const svgPath = '/**/*.svg'
 // ------------
 
 const glob = require('glob')
+const { writeFileSync } = require('fs')
 const { copySync } = require('fs-extra')
-const { resolve } = require('path')
+const { resolve, join } = require('path')
 
 const start = new Date()
 
@@ -26,11 +27,14 @@ const svgExports = []
 const typeExports = []
 
 function filterName (name) {
-  if (name === 'entypo-google+with-circle' || name === 'entypo-google+') {
-    return name.replace('+', '')
+  if (name === 'google+-with-circle') {
+    return name.replace('+', '-plus')
   }
-  else if (name === 'entypoResize100%') {
-    return name.replace('%', '')
+  else if (name === 'google+') {
+    return name.replace('+', '-plus')
+  }
+  else if (name === 'resize-100%') {
+    return name.replace('%', 'Percent')
   }
   return name
 }
@@ -62,6 +66,12 @@ copySync(
   resolve(__dirname, `../${ distName }/LICENSE.md`)
 )
 
+// write the JSON file
+const file = resolve(__dirname, join('..', distName, 'icons.json'))
+writeFileSync(file, JSON.stringify([...iconNames].sort(), null, 2), 'utf-8')
+
 const end = new Date()
 
-console.log(`${ iconSetName } done (${ end - start }ms)`)
+console.log(`${ iconSetName } (count: ${ iconNames.size }) done (${ end - start }ms)`)
+
+process.send && process.send({ distName, iconNames: [...iconNames], time: end - start })

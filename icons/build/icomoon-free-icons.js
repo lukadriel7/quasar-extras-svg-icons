@@ -9,8 +9,9 @@ const renameRegex = /\d{3}-([?:\S]+)/
 // ------------
 
 const glob = require('glob')
+const { writeFileSync } = require('fs')
 const { copySync } = require('fs-extra')
-const { resolve } = require('path')
+const { resolve, join } = require('path')
 
 const start = new Date()
 
@@ -29,6 +30,13 @@ function filterName (name) {
   return name.match(renameRegex)[ 1 ]
 }
 
+const preFilters = [
+  {
+    from: /#000000/g,
+    to: 'currentColor;'
+  }
+]
+
 svgFiles.forEach(file => {
   const name = defaultNameMapper(file, prefix, { filterName })
 
@@ -37,7 +45,7 @@ svgFiles.forEach(file => {
   }
 
   try {
-    const { svgDef, typeDef } = extract(file, name)
+    const { svgDef, typeDef } = extract(file, name, { preFilters })
     svgExports.push(svgDef)
     typeExports.push(typeDef)
 
@@ -56,6 +64,12 @@ copySync(
   resolve(__dirname, `../${ distName }/LICENSE.md`)
 )
 
+// write the JSON file
+const file = resolve(__dirname, join('..', distName, 'icons.json'))
+writeFileSync(file, JSON.stringify([...iconNames].sort(), null, 2), 'utf-8')
+
 const end = new Date()
 
-console.log(`${ iconSetName } done (${ end - start }ms)`)
+console.log(`${ iconSetName } (count: ${ iconNames.size }) done (${ end - start }ms)`)
+
+process.send && process.send({ distName, iconNames: [...iconNames], time: end - start })

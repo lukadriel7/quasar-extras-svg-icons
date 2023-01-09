@@ -1,15 +1,17 @@
 const xmldom = require('@xmldom/xmldom')
 const Parser = new xmldom.DOMParser()
 const { optimize } = require('svgo')
-let { defaultPlugins } = require('svgo/lib/svgo/config')
-
-// remove the 'removeViewBox' plugin, as we need 'viewBox' to not be removed
-defaultPlugins = defaultPlugins.filter(name => name !== 'removeViewBox' && name !== 'convertPathData')
 
 const { resolve, basename } = require('path')
 const { readFileSync, writeFileSync } = require('fs')
 
-const typeExceptions = [ 'g', 'svg', 'defs', 'style', 'title', 'clipPath', 'desc', 'mask', 'linearGradient', 'radialGradient', 'stop' ]
+const cjsReplaceRE = /export const /g
+const typeExceptions = [
+  'g', 'svg', 'defs', 'style', 'title', 'clipPath', 'desc', 'mask',
+  'linearGradient', 'radialGradient', 'stop', 'metadata',
+  'sodipodi:namedview', 'rdf:RDF', 'cc:Work', 'dc:title', 'dc:type',
+  'dc:format', 'text', 'animate', 'switch'
+]
 const noChildren = ['clipPath']
 
 function chunkArray (arr, size = 2) {
@@ -28,7 +30,7 @@ function getAttributes (el, list) {
   const att = {}
 
   list.forEach(name => {
-    att[ name ] = parseFloat(el.getAttribute(name))
+    att[ name ] = parseFloat(el.getAttribute(name) || 0)
   })
 
   return att
@@ -40,11 +42,12 @@ function getCurvePath (x, y, rx, ry) {
 
 const decoders = {
   svg (el) {
-
+    // Nothing here. This is needed to grab any attributes on svg tag..
   },
 
   path (el) {
-    const points = el.getAttribute('d')
+    const points = el.getAttribute('d').trim()
+    // return points
     return (points.charAt(0) === 'm' ? 'M0 0z' : '') + points
   },
 
@@ -128,24 +131,61 @@ const decoders = {
 
   line (el) {
     const att = getAttributes(el, [ 'x1', 'x2', 'y1', 'y2' ])
+    Object.keys(att).forEach(key => {
+      if (isNaN(att[ key ])) att[ key ] = 0
+    })
     return 'M' + att.x1 + ',' + att.y1 + 'L' + att.x2 + ',' + att.y2
   }
 }
 
 function getAttributesAsStyle (el) {
-  const exceptions = [ 'd', 'style', 'width', 'height', 'rx', 'ry', 'r', 'x', 'y', 'x1', 'y1', 'x2', 'y2', 'cx', 'cy', 'points', 'class', 'xmlns', 'viewBox', 'id', 'name', 'transform', 'data-name', 'aria-hidden', 'clip-path' ]
+  const exceptions = [
+    'd', 'style', 'width', 'height',
+    'rx', 'ry', 'r', 'x', 'y',
+    'x1', 'y1', 'x2', 'y2', 'cx', 'cy',
+    'points', 'class', 'xmlns', 'xmlns:xlink', 'viewBox',
+    'id', 'name', 'transform', 'data-name',
+    'aria-hidden', 'aria-label', 'clip-path', 'xml:space',
+    'id', 'version', 'enable-background', 'mask',
+    'focusable', 'baseProfile', 'aria-labelledby',
+    'role', 'xmlns:dc', 'xmlns:svg', 'xmlns:cc',
+    'xmlns:rdf', 'xmlns:sodipodi', 'xmlns:inkscape',
+    'inkscape:version', 'sodipodi:docname', 'inkscape:connector-curvature',
+    'data-tags', 'data-du', 'sodipodi:nodetypes'
+  ]
   let styleString = ''
   for (let i = 0; i < el.attributes.length; ++i) {
     const attr = el.attributes[ i ]
     if (exceptions.includes(attr.nodeName) !== true) {
-      // if (attr.nodeName === 'fill' && attr.nodeValue === 'currentColor') continue
       styleString += `${ attr.nodeName }:${ attr.nodeValue };`
     }
   }
   return styleString
 }
 
-function parseDom (name, el, pathsDefinitions, attributes, options) {
+function getRecursiveAttributes (el) {
+  let attributes = ''
+  if (el.parentNode?.attributes) {
+    attributes += getRecursiveAttributes(el.parentNode)
+  }
+
+  attributes += getAttributesAsStyle(el)
+
+  return attributes
+}
+
+function getRecursiveTransforms (el) {
+  let transforms = ''
+  if (el.parentNode?.attributes) {
+    transforms += getRecursiveTransforms(el.parentNode)
+  }
+
+  transforms += el.getAttribute('transform')
+
+  return transforms
+}
+
+function parseDom (name, el, pathsDefinitions, options) {
   const type = el.nodeName
 
   if (
@@ -162,9 +202,9 @@ function parseDom (name, el, pathsDefinitions, attributes, options) {
       return
     }
 
-    // don't allow for multiples of same
-    let strAttributes = (attributes + (el.getAttribute('style') || getAttributesAsStyle(el)))
-    
+    const style = el.getAttribute('style') || ''
+    let strAttributes = (style + getRecursiveAttributes(el)).replace(/;;/g, ';')
+
     // any styles filters?
     if (options?.stylesFilter) {
       if (Array.isArray(options.stylesFilter) && options.stylesFilter.length > 0) {
@@ -177,49 +217,65 @@ function parseDom (name, el, pathsDefinitions, attributes, options) {
       }
     }
 
+    // This must come after filter function above
+    // don't allow fill to be both 'none' and 'currentColor'
+    // ths is common because of the inheritance of 'fill:none' from an 'svg' tag
+    if (strAttributes.indexOf('fill:none;') >= 0 && strAttributes.indexOf('fill:currentColor;') >= 0) {
+      strAttributes = strAttributes.replace(/fill:none;/, '')
+    }
+
     const arrAttributes = strAttributes.split(';')
     const combinedStyles = new Set(arrAttributes)
+
+    const transform = getRecursiveTransforms(el)
 
     const paths = {
       path: decoders[ type ](el),
       style: Array.from(combinedStyles).join(';'),
-      transform: el.getAttribute('transform')
+      transform: transform
     }
 
     if (paths.path.length > 0) {
       pathsDefinitions.push(paths)
     }
   }
-  else if (type === 'g') {
-    attributes += el.getAttribute('style') || getAttributesAsStyle(el)
-  }
 
   if (noChildren.includes(type) === false) {
     Array.from(el.childNodes).forEach(child => {
-      parseDom(name, child, pathsDefinitions, attributes, options)
+      parseDom(name, child, pathsDefinitions, options)
     })
   }
 }
 
+function getWidthHeightAsViewbox (el) {
+  const att = getAttributes(el, [ 'width', 'height' ])
+  if (att.width && att.height) {
+    return `0 0 ${ att.width } ${ att.height }`
+  }
+  return ''
+}
+
 function parseSvgContent (name, content, options) {
-  const dom = Parser.parseFromString(content, 'text/xml')
-
-  const viewBox = dom.documentElement.getAttribute('viewBox')
+  let viewBox
   const pathsDefinitions = []
-
-  // const strokeWidth = dom.documentElement.getAttribute('stroke-width')
-  // const stroke = dom.documentElement.getAttribute('stroke')
-  // const fill = dom.documentElement.getAttribute('fill')
-  // const strokeLinecap = dom.documentElement.getAttribute('stroke-line-cap')
-  // const strokeLinejoin = dom.documentElement.getAttribute('stroke-linejoin')
-
-  const attributes = getAttributesAsStyle(dom.documentElement)
-
   try {
-    parseDom(name, dom.documentElement, pathsDefinitions, attributes, options)
+    const dom = Parser.parseFromString(content, 'text/xml')
+
+    viewBox = dom.documentElement.getAttribute('viewBox')
+
+    if (!viewBox) {
+      // check if there is width and height
+      viewBox = getWidthHeightAsViewbox(dom.documentElement)
+    }
+
+    if (viewBox && options?.viewBoxFilter && typeof options.viewBoxFilter === 'function') {
+      viewBox = options.viewBoxFilter(viewBox)
+    }
+
+    parseDom(name, dom.documentElement, pathsDefinitions, options)
   }
   catch (err) {
-    console.error(`[Error] "${ name }" could not be parsed:`)
+    console.error(`[Error] "${ name }" could not be parsed:`, err)
     throw err
   }
 
@@ -242,7 +298,6 @@ function parseSvgContent (name, content, options) {
     result.paths = pathsDefinitions
       .map(def => {
         return def.path
-          // (def.style ? `@@${def.style.replace(/#[0-9a-fA-F]{3,6}/g, 'currentColor')}` : (def.transform ? '@@' : '')) +
           + (def.style ? `@@${ def.style }` : (def.transform ? '@@' : ''))
           + (def.transform ? `@@${ def.transform }` : '')
       })
@@ -273,7 +328,7 @@ module.exports.defaultNameMapper = (filePath, prefix, options) => {
     baseName = options.filterName(baseName)
   }
 
-  let name = ((prefix ? prefix + '-' : '') + baseName).replace(/_|%|\+/g, '-').replace(/\s|-{2,}/g, '-').replace(/(-\w)/g, m => m[ 1 ].toUpperCase())
+  let name = ((prefix ? prefix + '-' : '') + baseName).replace(/_|%|\+|\./g, '-').replace(/\s|-{2,}/g, '-').replace(/(-\w)/g, m => m[ 1 ].toUpperCase())
   if (name.charAt(name.length - 1) === '-' || name.charAt(name.length - 1) === ' ') {
     name = name.slice(0, name.length - 1)
   }
@@ -281,11 +336,24 @@ module.exports.defaultNameMapper = (filePath, prefix, options) => {
 }
 
 function extractSvg (content, name, options = {}) {
+  // Why is it some SVG has something like this? 'height="2""' - a pain!
+  // Fix it up for the parser. Seems to be an Icomoon/Inkscape issue.
+  // Another found: '<rect" x="14"'
+  content = content
+    .replace(/"2""/g, '"2"')
+    .replace(/ "/g, '"')
+    .replace(/rect" /g, 'rect ')
+
   // any svg preFilters?
-  if (options?.preFilters && options.preFilters.length > 0) {
-    options.preFilters.forEach(filter => {
-      content = content.replace(filter.from, filter.to)
-    })
+  if (options?.preFilters) {
+    if (typeof options.preFilters === 'function') {
+      content = options.preFilters(name, content)
+    }
+    else if (options.preFilters.length > 0) {
+      options.preFilters.forEach(filter => {
+        content = content.replace(filter.from, filter.to)
+      })  
+    }
   }
 
   // any excluded icons from SVGO?
@@ -295,27 +363,44 @@ function extractSvg (content, name, options = {}) {
   }
 
   let result
-  if (!isExcluded) {
-    const { data } = optimize(content, {
-      plugins: defaultPlugins
-    })
-    result = data
-  }
+  // if (!isExcluded) {
+  //   const { data } = optimize(content, {
+  //     plugins: [
+  //       {
+  //         name: 'preset-default',
+  //         params: {
+  //           overrides: {
+  //             removeViewBox: false
+  //           }
+  //         }
+  //       }
+  //     ]
+  //   })
+  //   result = data
+  // }
 
-
-  const optimizedSvgString = result || content
-  const { paths, viewBox } = parseSvgContent(name, optimizedSvgString, options)
+  const optimizedSvgContent = result || content
+  const { paths, viewBox } = parseSvgContent(name, optimizedSvgContent, options)
   let paths2 = paths
   // any svg postFilters?
-  if (options?.postFilters && options.postFilters.length > 0) {
-    options.postFilters.forEach(filter => {
-      paths2 = paths2.replace(filter.from, filter.to)
-    })
+  if (options?.postFilters) {
+    if (Array.isArray(options.postFilters) && options.postFilters.length > 0) {
+      options.postFilters.forEach(filter => {
+        paths2 = paths2.replace(filter.from, filter.to)
+      })
+    }
+    else if (typeof options.postFilters === 'function') {
+      paths2 = options.postFilters(paths2)
+    }
   }
   
   const path = paths2
-    .replace(/[\r\n\t]+/gi, ',')
+    .replace(/[\r\n]+/gi, ',')
+    .replace(/\s+/g, ' ') // multiple whitespace with 1 space
+    // .replace(/\t/g, ' ')
     .replace(/,,/gi, ',')
+    .replace(/, /gi, ' ')
+    .replace(/ z/g, 'z')
     .replace(/fill:none;fill:currentColor;/g, 'fill:currentColor;')
 
   return {
@@ -340,8 +425,11 @@ module.exports.writeExports = (iconSetName, versionOrPackageName, distFolder, sv
     const banner = getBanner(iconSetName, versionOrPackageName);
     const distIndex = `${ distFolder }/index`
 
-    writeFileSync(`${ distIndex }.js`, banner + svgExports.join('\n'), 'utf-8')
-    writeFileSync(`${ distIndex }.d.ts`, banner + typeExports.join('\n'), 'utf-8')
+    const content = banner + svgExports.sort().join('\n')
+
+    writeFileSync(`${ distIndex }.js`, content.replace(cjsReplaceRE, 'module.exports.'), 'utf-8')
+    writeFileSync(`${ distIndex }.mjs`, content, 'utf-8')
+    writeFileSync(`${ distIndex }.d.ts`, banner + typeExports.sort().join('\n'), 'utf-8')
 
     if (skipped.length > 0) {
       console.log(`${ iconSetName } - skipped (${ skipped.length }): ${ skipped }`)

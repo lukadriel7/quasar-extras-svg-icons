@@ -9,6 +9,7 @@ const svgPath = '/*.svg'
 // ------------
 
 const glob = require('glob')
+const { writeFileSync } = require('fs')
 const { copySync } = require('fs-extra')
 const { resolve, join } = require('path')
 
@@ -25,7 +26,7 @@ const iconNames = new Set()
 const svgExports = []
 const typeExports = []
 
-const preFilters = [
+const piePreFilters = [
   {
     from: /<use fill="#555" xlink:href="#pie-chart-a"\/>/,
     to: ''
@@ -44,6 +45,13 @@ const preFilters = [
   }
 ]
 
+const preFilters = [
+  {
+    from: /#555/,
+    to: 'currentColor'
+  }
+]
+
 svgFiles.forEach(file => {
   const name = defaultNameMapper(file, prefix)
 
@@ -52,7 +60,7 @@ svgFiles.forEach(file => {
   }
 
   try {
-    const { svgDef, typeDef } = extract(file, name, name === 'uiwPieChart' ? { preFilters } : {})
+    const { svgDef, typeDef } = extract(file, name, name === 'uiwPieChart' ? { preFilters: piePreFilters } : { preFilters })
     svgExports.push(svgDef)
     typeExports.push(typeDef)
 
@@ -72,6 +80,12 @@ copySync(
   resolve(__dirname, `../${ distName }/LICENSE.md`)
 )
 
+// write the JSON file
+const file = resolve(__dirname, join('..', distName, 'icons.json'))
+writeFileSync(file, JSON.stringify([...iconNames].sort(), null, 2), 'utf-8')
+
 const end = new Date()
 
-console.log(`${ iconSetName } done (${ end - start }ms)`)
+console.log(`${ iconSetName } (count: ${ iconNames.size }) done (${ end - start }ms)`)
+
+process.send && process.send({ distName, iconNames: [...iconNames], time: end - start })

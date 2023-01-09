@@ -1,7 +1,7 @@
 const packageName = 'boxicons'
 const distName = 'box-icons'
 const iconSetName = 'Box Icons'
-const prefix = 'box'
+const prefix = ''
 const iconPath = 'svg'
 const svgPath = '/**/*.svg'
 const license = 'https://github.com/atisawd/boxicons#License'
@@ -9,8 +9,9 @@ const license = 'https://github.com/atisawd/boxicons#License'
 // ------------
 
 const glob = require('glob')
+const { writeFileSync } = require('fs')
 const { copySync } = require('fs-extra')
-const { resolve } = require('path')
+const { resolve, join } = require('path')
 
 const start = new Date()
 
@@ -68,6 +69,12 @@ writeExports(iconSetName, packageName, distFolder, svgExports, typeExports, skip
 //   resolve(__dirname, `../${distName}/LICENSE.md`)
 // )
 
+// write the JSON file
+const file = resolve(__dirname, join('..', distName, 'icons.json'))
+writeFileSync(file, JSON.stringify([...iconNames].sort(), null, 2), 'utf-8')
+
 const end = new Date()
 
-console.log(`${ iconSetName } done (${ end - start }ms)`)
+console.log(`${ iconSetName } (count: ${ iconNames.size }) done (${ end - start }ms)`)
+
+process.send && process.send({ distName, iconNames: [...iconNames], time: end - start })

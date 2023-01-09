@@ -43,10 +43,10 @@
       </q-timeline-entry>
 
       <q-timeline-entry
-        v-for="icon in iconInfo"
+        v-for="(icon, index) in iconInfo"
         :key="icon.title"
         :title="icon.title"
-        :side="icon.side"
+        :side="index % 2 ? 'left' : 'right'"
       >
         <div>
           <q-intersection
@@ -90,157 +90,286 @@ export default defineComponent({
     const iconInfo = [
       {
         title: 'Akar Icons',
-        side: 'left',
         src: '/akar-icons.png'
       },
       {
         title: 'Ant Design Icons',
-        side: 'right',
         src: '/ant-design-icons.png'
       },
       {
         title: 'Box Icons',
-        side: 'left',
         src: '/box-icons.png'
       },
       {
+        title: 'Brand Icons',
+        src: '/brand-icons.png'
+      },
+      {
+        title: 'Brandico Icons',
+        src: '/brandico-icons.png'
+      },
+      {
+        title: 'Bytesize Icons',
+        src: '/bytesize-icons.png'
+      },
+      {
+        title: 'Carbon Icons',
+        src: '/carbon-icons.png'
+      },
+      {
+        title: 'Carbon Pictograms',
+        src: '/carbon-pictograms.png'
+      },
+      {
+        title: 'Clarity Icons',
+        src: '/clarity-icons.png'
+      },
+      {
         title: 'Codicons',
-        side: 'right',
         src: '/codicons.png'
       },
       {
         title: 'Cool Icons',
-        side: 'left',
         src: '/cool-icons.png'
       },
       {
+        title: 'CoreUI Icons',
+        src: '/coreui-icons.png'
+      },
+      {
         title: 'Country Flag Icons',
-        side: 'right',
         src: '/country-flag-icons.png'
       },
       {
-        title: 'Entypo Icons',
-        side: 'left',
+        title: 'Dashicons',
+        src: '/dashicons.png'
+      },
+      {
+        title: 'Dev Icons',
+        src: '/dev-icons.png'
+      },
+      {
+        title: 'Drip Icons',
+        src: '/drip-icons.png'
+      },
+      {
+        title: 'Elusive Icons',
+        src: '/elusive-icons.png'
+      },
+      {
+        title: 'Entypo+ Icons',
         src: '/entypo-icons.png'
       },
       {
+        title: 'Evil Icons',
+        src: '/evil-icons.png'
+      },
+      {
+        title: 'Feather Icons',
+        src: '/feather-icons.png'
+      },
+      {
+        title: 'Flat Color Icons (Icons8)',
+        src: '/flat-color-icons.png'
+      },
+      {
+        title: 'FlatUI Icons',
+        src: '/flatui-icons.png'
+      },
+      {
         title: 'FluentUI Systems Icons',
-        side: 'right',
         src: '/fluentui-icons.png'
       },
       {
-        title: 'Health Icons',
-        side: 'left',
-        src: '/health-icons.png'
+        title: 'Fontisto Icons',
+        src: '/fontisto-icons.png'
       },
       {
-        title: 'Hero Icons (outline)',
-        side: 'right',
-        src: '/hero-icons-outline.png'
+        title: 'Foundation Icons',
+        src: '/foundation-icons.png'
       },
       {
-        title: 'Hero Icons (solid)',
-        side: 'left',
-        src: '/hero-icons-solid.png'
+        title: 'Geom Icons',
+        src: '/geom-icons.png'
+      },
+      {
+        title: 'GitLab Icons',
+        src: '/gitlab-icons.png'
+      },
+      {
+        title: 'Glyphs Brands',
+        src: '/glyphs-brands.png'
+      },
+      {
+        title: 'Glyphs Core Icons',
+        src: '/glyphs-core-icons.png'
       },
       {
         title: 'Grid Icons',
-        side: 'right',
         src: '/grid-icons.png'
       },
       {
+        title: 'Health Icons',
+        src: '/health-icons.png'
+      },
+      {
+        title: 'Hero Icons',
+        src: '/hero-icons-outline.png'
+      },
+      {
         title: 'Icomoon Free Icons',
-        side: 'left',
         src: '/icomoon-free-icons.png'
       },
       {
         title: 'Iconoir',
-        side: 'right',
         src: '/iconoir.png'
       },
       {
+        title: 'IconPark Icons',
+        src: '/iconpark-icons.png'
+      },
+      {
+        title: 'Icons Material (mui)',
+        src: '/icons-material.png'
+      },
+      {
+        title: 'Ikonate',
+        src: '/ikonate.png'
+      },
+      {
+        title: 'Ikons',
+        src: '/ikons.png'
+      },
+      {
         title: 'Jam Icons',
-        side: 'left',
         src: '/jam-icons.png'
       },
       {
+        title: 'Keyrune Icons',
+        src: '/keyrune-icons.png'
+      },
+      {
+        title: 'Linear Icons',
+        src: '/linear-icons.png'
+      },
+      {
+        title: 'Linecons',
+        src: '/linecons.png'
+      },
+      {
+        title: 'Maki Icons (Mapbox)',
+        src: '/maki-icons.png'
+      },
+      {
+        title: 'Map Icons',
+        src: '/map-icons.png'
+      },
+      {
         title: 'Material Line Icons',
-        side: 'right',
         src: '/material-line-icons.png'
       },
       {
-        title: 'Octicons',
-        side: 'left',
+        title: 'Material Theme Icons',
+        src: '/material-theme-icons.png'
+      },
+      {
+        title: 'Octicons (Prime)',
         src: '/octicons.png'
       },
       {
+        title: 'Octicons (Prime) v17',
+        src: '/octicons-v17.png'
+      },
+      {
+        title: 'Open Iconic',
+        src: '/open-iconic.png'
+      },
+      {
+        title: 'Openmoji Icons',
+        src: '/openmoji-icons.png'
+      },
+      {
+        title: 'Phosphor Icons',
+        src: '/phosphor-icons.png'
+      },
+      {
         title: 'Pixel Art Icons',
-        side: 'right',
         src: '/pixelart-icons.png'
       },
       {
         title: 'Prime Icons',
-        side: 'left',
         src: '/prime-icons.png'
       },
       {
         title: 'Radix-UI Icons',
-        side: 'right',
         src: '/radix-ui-icons.png'
       },
       {
         title: 'Remix Icons',
-        side: 'left',
         src: '/remix-icons.png'
       },
       {
         title: 'Simple Icons',
-        side: 'right',
         src: '/simple-icons.png'
       },
       {
+        title: 'Simple Line Icons',
+        src: '/simple-line-icons.png'
+      },
+      {
+        title: 'Stroke 7 Icons (Pixeden)',
+        src: '/stroke7-icons.png'
+      },
+      {
+        title: 'Subway Icons',
+        src: '/subway-icons.png'
+      },
+      {
         title: 'System UIcons',
-        side: 'left',
         src: '/system-uicons.png'
       },
       {
         title: 'Tabler Icons',
-        side: 'right',
         src: '/tabler-icons.png'
       },
       {
         title: 'Teeny Icons',
-        side: 'left',
         src: '/teeny-icons.png'
       },
       {
+        title: 'Typicons',
+        src: '/typ-icons.png'
+      },
+      {
         title: 'UIW Icons',
-        side: 'right',
         src: '/uiw-icons.png'
       },
       {
         title: 'Unicons',
-        side: 'left',
         src: '/unicons.png'
       },
       {
         title: 'Vaadin Icons',
-        side: 'right',
         src: '/vaadin-icons.png'
       },
       {
+        title: 'Vaadin Icons v23',
+        src: '/vaadin-icons-v23.png'
+      },
+      {
         title: 'Weather Icons',
-        side: 'left',
         src: '/weather-icons.png'
       },
       {
         title: 'Webfont Medical Icons',
-        side: 'right',
         src: '/webfont-medical-icons.png'
       },
       {
+        title: 'Windows Icons',
+        src: '/windows-icons.png'
+      },
+      {
         title: 'Zond Icons',
-        side: 'left',
         src: '/zond-icons.png'
       }
     ]
